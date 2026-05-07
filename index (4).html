@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="키워드탐색기">
+<title>블로그 키워드 탐색기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f7;color:#1d1d1f;min-height:100vh;}
+.header{background:#fff;padding:16px;border-bottom:1px solid #e5e5ea;position:sticky;top:0;z-index:100;}
+.header h1{font-size:18px;font-weight:700;}
+.header p{font-size:12px;color:#8e8e93;margin-top:2px;}
+.tabs{display:flex;background:#fff;border-bottom:1px solid #e5e5ea;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:none;padding:10px 16px;font-size:12px;font-weight:600;color:#8e8e93;border:none;background:none;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.tab.active{color:var(--tc);border-bottom-color:var(--tc);}
+.tab .ts{font-size:10px;font-weight:400;opacity:.8;}
+.content{padding:12px;}
+.dtype{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600;margin-bottom:12px;}
+.d-live{background:#feeced;color:#c0392b;}
+.d-day{background:#fff3e0;color:#e65100;}
+.d-mon{background:#e8f5e9;color:#1b5e20;}
+.d-trend{background:#e3f2fd;color:#0d47a1;}
+.ldot{width:7px;height:7px;border-radius:50%;background:#e53935;display:inline-block;animation:pulse 1.4s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.2;}}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.bar-bg{height:4px;background:#f0f0f0;border-radius:3px;overflow:hidden;margin:6px 0;}
+.badge{display:inline-flex;font-size:10px;padding:2px 6px;border-radius:5px;font-weight:600;background:#feeced;color:#c0392b;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.spin{display:inline-block;animation:sp .7s linear infinite;}
+.loading{text-align:center;padding:3rem 0;color:#8e8e93;font-size:14px;}
+.empty{text-align:center;padding:3rem 0;color:#8e8e93;font-size:14px;}
+.top-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.ref-btn{display:flex;align-items:center;gap:4px;padding:7px 14px;border-radius:20px;border:1px solid #e5e5ea;background:#fff;color:#8e8e93;font-size:12px;cursor:pointer;font-weight:500;}
+.ref-btn:active{background:#f5f5f7;}
+.blog-btn{font-size:12px;color:#007aff;background:none;border:none;cursor:pointer;text-align:left;padding:0;line-height:1.5;}
+.s-box{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.s-row{display:flex;gap:8px;}
+.s-inp{flex:1;padding:9px 14px;border-radius:20px;border:1.5px solid #e5e5ea;font-size:14px;background:#f5f5f7;outline:none;-webkit-appearance:none;}
+.s-inp:focus{border-color:#03c75a;background:#fff;}
+.s-btn{padding:9px 18px;border-radius:20px;border:none;background:#03c75a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;}
+.s-btn:active{background:#02a84e;}
+.stabs{display:flex;gap:8px;margin-bottom:12px;}
+.stab{padding:7px 16px;border-radius:20px;border:1px solid #e5e5ea;background:#fff;color:#8e8e93;font-size:13px;cursor:pointer;font-weight:500;}
+.stab.on{background:#03c75a;border-color:#03c75a;color:#fff;}
+.cat-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.cat-btn{padding:6px 13px;border-radius:20px;border:1px solid #e5e5ea;background:#fff;color:#8e8e93;font-size:12px;cursor:pointer;}
+.cat-btn.on{border-color:#03c75a;color:#03c75a;font-weight:600;background:#e8f5e9;}
+.cat-btn:active{background:#f5f5f7;}
+.mode-btn{padding:5px 12px;border-radius:20px;border:1px solid #e5e5ea;background:#fff;color:#8e8e93;font-size:12px;cursor:pointer;}
+.mode-btn.on{background:#e53935;border-color:#e53935;color:#fff;}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#e3f2fd;color:#0d47a1;font-size:12px;margin:2px;}
+.chip button{background:none;border:none;cursor:pointer;color:#0d47a1;font-size:15px;line-height:1;padding:0;}
+.spark{display:flex;align-items:flex-end;gap:2px;height:28px;margin:4px 0;}
+.sbar{border-radius:2px 2px 0 0;min-width:6px;flex:1;}
+.dir-up{color:#e53935;font-weight:700;}
+.dir-dn{color:#1565c0;font-weight:700;}
+.dir-st{color:#8e8e93;font-weight:700;}
+.preset-btn{padding:6px 13px;border-radius:20px;border:1px solid #0d47a1;background:#fff;color:#0d47a1;font-size:12px;cursor:pointer;margin:2px;}
+.preset-btn:active{background:#e3f2fd;}
+.upd-txt{font-size:10px;color:#8e8e93;font-family:monospace;}
+/* 아이폰 홈 화면 추가 안내 */
+.install-banner{background:#007aff;color:#fff;padding:10px 16px;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.install-banner button{background:rgba(255,255,255,.25);border:none;color:#fff;padding:4px 10px;border-radius:10px;font-size:12px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- 홈 화면 추가 안내 배너 -->
+<div class="install-banner" id="installBanner">
+  <span>📲 Safari에서 열고 홈 화면에 추가하면 앱처럼 사용 가능!</span>
+  <button onclick="document.getElementById('installBanner').style.display='none'">닫기</button>
+</div>
+
+<div class="header">
+  <h1>블로그 키워드 탐색기</h1>
+  <p>실제 포털 데이터 기반 키워드 분석</p>
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="t-naver" style="--tc:#03c75a" onclick="switchTab('naver')">
+    🟢 네이버<span class="ts">월간검색량+트렌드</span>
+  </button>
+  <button class="tab" id="t-youtube" style="--tc:#ff0000" onclick="switchTab('youtube')">
+    🔴 유튜브<span class="ts">오늘 인기영상</span>
+  </button>
+  <button class="tab" id="t-google" style="--tc:#4285f4" onclick="switchTab('google')">
+    🔵 구글<span class="ts">실시간 급상승</span>
+  </button>
+</div>
+
+<div class="content">
+
+<!-- 네이버 -->
+<div id="p-naver">
+  <div class="stabs">
+    <button class="stab on" id="st-m" onclick="switchNaver('monthly')">📊 월간 검색량</button>
+    <button class="stab" id="st-t" onclick="switchNaver('trend')">📈 트렌드 방향</button>
+  </div>
+
+  <div id="np-monthly">
+    <div class="dtype d-mon">🟢 월간 데이터 — 지난 30일 평균 검색 횟수</div>
+    <div class="s-box">
+      <div style="font-size:13px;font-weight:600;color:#8e8e93;margin-bottom:8px;">🔍 키워드 직접 검색</div>
+      <div class="s-row">
+        <input class="s-inp" id="naverInput" placeholder="키워드 입력 (예: 다이어트)">
+        <button class="s-btn" id="searchNaverBtn">검색</button>
+      </div>
+    </div>
+    <div class="top-row">
+      <div style="font-size:13px;font-weight:600;color:#8e8e93;">📋 카테고리별 인기 키워드</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span style="font-size:11px;color:#8e8e93;">자동갱신</span>
+          <button class="mode-btn" id="autoBtn">OFF</button>
+        </div>
+        <button class="ref-btn" id="refNaverBtn"><span id="n-spin"></span>↻</button>
+      </div>
+    </div>
+    <div class="cat-wrap" id="naver-cats"></div>
+    <div id="n-upd" class="upd-txt" style="margin-bottom:8px;"></div>
+    <div id="naver-area"><div class="empty">카테고리를 선택하거나<br>키워드를 검색하세요</div></div>
+  </div>
+
+  <div id="np-trend" style="display:none;">
+    <div class="dtype d-trend">📈 트렌드 방향 — 네이버 DataLab (최근 30일)</div>
+    <div class="s-box">
+      <div style="font-size:13px;font-weight:600;color:#8e8e93;margin-bottom:8px;">비교할 키워드 입력 (최대 5개)</div>
+      <div class="s-row" style="margin-bottom:8px;">
+        <input class="s-inp" id="dlInput" placeholder="키워드 입력 후 추가">
+        <button class="s-btn" style="background:#0d47a1;" id="addDlBtn">추가</button>
+      </div>
+      <div id="dlChips"></div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:600;color:#8e8e93;margin-bottom:8px;">📌 프리셋</div>
+      <div id="dl-presets"></div>
+    </div>
+    <div class="top-row">
+      <span id="dl-upd" class="upd-txt"></span>
+      <button class="ref-btn" id="runDlBtn" style="border-color:#0d47a1;color:#0d47a1;font-weight:600;"><span id="dl-spin"></span>↻ 분석 실행</button>
+    </div>
+    <div id="trend-area"><div class="empty">키워드를 추가하고<br>분석 실행을 클릭하세요</div></div>
+  </div>
+</div>
+
+<!-- 유튜브 -->
+<div id="p-youtube" style="display:none;">
+  <div class="dtype d-day">🟠 오늘 인기 — 당일 조회수 급상승 영상 키워드</div>
+  <div class="top-row">
+    <span style="font-size:12px;color:#8e8e93;">한국 유튜브 인기 급상승 키워드</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span id="yt-upd" class="upd-txt"></span>
+      <button class="ref-btn" id="refYtBtn"><span id="yt-spin"></span>↻ 새로고침</button>
+    </div>
+  </div>
+  <div id="youtube-area"><div class="loading"><span class="spin">↻</span> 로딩 중...</div></div>
+</div>
+
+<!-- 구글 -->
+<div id="p-google" style="display:none;">
+  <div class="dtype d-live"><span class="ldot"></span> 실시간 — 지금 급상승 검색어 (10~30분 갱신)</div>
+  <div class="top-row">
+    <span style="font-size:12px;color:#8e8e93;">한국 구글 실시간 급상승 검색어</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span id="g-upd" class="upd-txt"></span>
+      <button class="ref-btn" id="refGBtn"><span id="g-spin"></span>↻ 새로고침</button>
+    </div>
+  </div>
+  <div id="google-area"><div class="loading"><span class="spin">↻</span> 로딩 중...</div></div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+const SERVER='https://script.google.com/macros/s/AKfycbxEkiDha6jaQ3bkAXvWgRoiRGiG69Hz2sxCDsNsnOzcrRoKzZCVDXW1Lt_jaT87Slcjgg/exec';
+
+const CATS=[
+  {id:'health',label:'건강/뷰티',hint:'저속노화'},
+  {id:'diet',label:'다이어트',hint:'다이어트'},
+  {id:'travel',label:'여행',hint:'일본여행'},
+  {id:'economy',label:'경제/재테크',hint:'ETF'},
+  {id:'it',label:'IT/AI',hint:'클로드AI'},
+  {id:'food',label:'음식/맛집',hint:'편의점신상'},
+  {id:'parenting',label:'육아/교육',hint:'어린이날선물'},
+  {id:'pet',label:'반려동물',hint:'강아지사료'},
+  {id:'hobby',label:'취미/DIY',hint:'홈짐'},
+  {id:'fashion',label:'패션',hint:'린넨코디'},
+  {id:'celeb',label:'방송/연예',hint:'아이돌'},
+  {id:'culture',label:'영화/드라마',hint:'넷플릭스'},
+];
+
+const PRESETS=[
+  {label:'건강',kws:['저속노화','다이어트','홈트레이닝','간헐적단식','필라테스']},
+  {label:'재테크',kws:['ETF','비트코인','금투자','ISA','부동산']},
+  {label:'IT',kws:['AI','챗GPT','클로드','유튜브','넷플릭스']},
+  {label:'여행',kws:['일본여행','대만여행','유럽여행','제주도','캠핑']},
+];
+
+let curCat=null,autoTimer=null,autoOn=false;
+let ytLoaded=false,gLoaded=false;
+let dlKws=['저속노화','다이어트','AI','ETF','여행'];
+
+// 카테고리 버튼 생성
+const catWrap=document.getElementById('naver-cats');
+CATS.forEach(function(c){
+  const b=document.createElement('button');
+  b.className='cat-btn';b.textContent=c.label;b.id='nc-'+c.id;
+  b.addEventListener('click',function(){selectCat(c);});
+  catWrap.appendChild(b);
+});
+
+// 프리셋
+const presetWrap=document.getElementById('dl-presets');
+PRESETS.forEach(function(p){
+  const b=document.createElement('button');
+  b.className='preset-btn';b.textContent=p.label;
+  b.addEventListener('click',function(){dlKws=p.kws.slice();renderChips();loadDataLab();});
+  presetWrap.appendChild(b);
+});
+
+// 이벤트
+document.getElementById('searchNaverBtn').addEventListener('click',searchNaver);
+document.getElementById('naverInput').addEventListener('keydown',function(e){if(e.key==='Enter')searchNaver();});
+document.getElementById('refNaverBtn').addEventListener('click',refreshNaver);
+document.getElementById('autoBtn').addEventListener('click',toggleAuto);
+document.getElementById('addDlBtn').addEventListener('click',addDlKw);
+document.getElementById('dlInput').addEventListener('keydown',function(e){if(e.key==='Enter')addDlKw();});
+document.getElementById('runDlBtn').addEventListener('click',loadDataLab);
+document.getElementById('refYtBtn').addEventListener('click',loadYoutube);
+document.getElementById('refGBtn').addEventListener('click',loadGoogle);
+
+function switchTab(tab){
+  ['naver','youtube','google'].forEach(function(t){
+    document.getElementById('t-'+t).classList.toggle('active',t===tab);
+    document.getElementById('p-'+t).style.display=t===tab?'block':'none';
+  });
+  if(tab==='youtube'&&!ytLoaded){ytLoaded=true;loadYoutube();}
+  if(tab==='google'&&!gLoaded){gLoaded=true;loadGoogle();}
+}
+
+function switchNaver(sub){
+  document.getElementById('st-m').classList.toggle('on',sub==='monthly');
+  document.getElementById('st-t').classList.toggle('on',sub==='trend');
+  document.getElementById('np-monthly').style.display=sub==='monthly'?'block':'none';
+  document.getElementById('np-trend').style.display=sub==='trend'?'block':'none';
+  if(sub==='trend'){renderChips();loadDataLab();}
+}
+
+// DataLab
+function addDlKw(){
+  const inp=document.getElementById('dlInput');
+  const kw=inp.value.trim();
+  if(!kw||dlKws.indexOf(kw)>=0||dlKws.length>=5)return;
+  dlKws.push(kw);inp.value='';renderChips();
+}
+function removeDlKw(kw){
+  dlKws=dlKws.filter(function(k){return k!==kw;});
+  renderChips();
+}
+function renderChips(){
+  document.getElementById('dlChips').innerHTML=dlKws.map(function(k){
+    return '<span class="chip">'+k+'<button onclick="removeDlKw(\''+k+'\')">×</button></span>';
+  }).join('');
+}
+
+async function loadDataLab(){
+  if(!dlKws.length){setArea('trend','<div class="empty">키워드를 추가해주세요</div>');return;}
+  setSpin('dl-spin',true);
+  setArea('trend','<div class="loading"><span class="spin">↻</span> DataLab 분석 중...</div>');
+  try{
+    const res=await fetch(SERVER+'?type=datalab&keywords='+encodeURIComponent(dlKws.join(',')));
+    const data=await res.json();
+    if(data.error){setArea('trend','<div class="empty">오류: '+data.error+'</div>');return;}
+    renderDataLab(data);setUpd('dl-upd');
+  }catch(e){setArea('trend','<div class="empty">연결 실패</div>');}
+  finally{setSpin('dl-spin',false);}
+}
+
+function renderDataLab(data){
+  const trends=data.trends||[];
+  if(!trends.length){setArea('trend','<div class="empty">데이터 없음</div>');return;}
+  const sorted=trends.slice().sort(function(a,b){return b.score-a.score;});
+  const maxScore=sorted[0]?sorted[0].score:1;
+  let html='<div style="font-size:11px;color:#8e8e93;font-family:monospace;margin-bottom:8px;">분석 기간: '+data.period+'</div>';
+  html+='<div style="font-size:11px;color:#0d47a1;background:#e3f2fd;padding:8px 12px;border-radius:10px;margin-bottom:10px;">ℹ️ 트렌드 지수는 상대값(0~100)입니다.</div>';
+  sorted.forEach(function(k,i){
+    const pct=maxScore?Math.round(k.score/maxScore*100):0;
+    const dirC=k.dir==='up'?'dir-up':k.dir==='down'?'dir-dn':'dir-st';
+    const dirA=k.dir==='up'?'↑↑':k.dir==='down'?'↓':'-';
+    const barC=k.dir==='up'?'#e53935':k.dir==='down'?'#1565c0':'#03c75a';
+    const pts=k.data||[];
+    const maxR=Math.max.apply(null,pts.map(function(p){return p.ratio;}).concat([1]));
+    const sparkBars=pts.map(function(p){
+      const h=Math.max(3,Math.round(p.ratio/maxR*26));
+      return '<div class="sbar" style="height:'+h+'px;background:'+barC+';opacity:.7;"></div>';
+    }).join('');
+    const safeKw=k.keyword.replace(/'/g,"\\'");
+    html+='<div class="card">';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;">';
+    html+='<div style="display:flex;align-items:center;gap:6px;">';
+    html+='<span style="font-size:11px;font-family:monospace;color:#8e8e93;">'+String(i+1).padStart(2,'0')+'</span>';
+    html+='<span style="font-size:15px;font-weight:600;">'+k.keyword+'</span>';
+    html+='<span class="'+dirC+'">'+dirA+' '+k.changeStr+'</span></div>';
+    html+='<div style="display:flex;align-items:center;gap:8px;">';
+    html+='<span style="font-size:11px;padding:3px 8px;border-radius:10px;background:'+(k.dir==='up'?'#feeced':k.dir==='down'?'#e3f2fd':'#f5f5f5')+';color:'+barC+';font-weight:600;">'+(k.dir==='up'?'상승중':k.dir==='down'?'하락중':'보합')+'</span>';
+    html+='<strong style="font-size:14px;color:'+barC+';">'+k.score+'</strong></div></div>';
+    html+='<div class="bar-bg"><div style="height:4px;border-radius:3px;background:'+barC+';width:'+pct+'%;"></div></div>';
+    html+='<div style="display:flex;align-items:flex-end;gap:3px;margin:4px 0;">';
+    html+='<span style="font-size:10px;color:#8e8e93;white-space:nowrap;padding-bottom:2px;">30일 추이</span>';
+    html+='<div class="spark" style="flex:1;">'+sparkBars+'</div></div>';
+    if(pts.length>1){
+      html+='<div style="display:flex;justify-content:space-between;font-size:10px;color:#8e8e93;margin-bottom:8px;">';
+      html+='<span>'+pts[0].date.slice(5)+'</span><span>'+pts[pts.length-1].date.slice(5)+'</span></div>';
+    }
+    html+='<div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;gap:6px;align-items:center;">';
+    html+='<span style="font-size:11px;color:#8e8e93;white-space:nowrap;">추천 제목</span>';
+    html+='<button class="blog-btn" onclick="copyTitle(\''+safeKw+' 블로그 주제 — 제목 3개와 목차 작성하기\')">'+k.keyword+' 블로그 주제 📋</button>';
+    html+='</div></div>';
+  });
+  setArea('trend',html);
+}
+
+// 네이버 월간
+async function selectCat(c){
+  curCat=c;
+  document.querySelectorAll('.cat-btn').forEach(function(b){b.classList.remove('on');});
+  document.getElementById('nc-'+c.id).classList.add('on');
+  await fetchNaver(c.hint,c.label);
+}
+async function searchNaver(){
+  const kw=document.getElementById('naverInput').value.trim();
+  if(!kw)return;
+  curCat=null;
+  document.querySelectorAll('.cat-btn').forEach(function(b){b.classList.remove('on');});
+  await fetchNaver(kw,'검색 결과');
+}
+async function refreshNaver(){if(curCat)await fetchNaver(curCat.hint,curCat.label);}
+
+async function fetchNaver(hint,label){
+  setSpin('n-spin',true);
+  setArea('naver','<div class="loading"><span class="spin">↻</span> "'+label+'" 검색량 조회 중...</div>');
+  try{
+    const res=await fetch(SERVER+'?type=naver&keyword='+encodeURIComponent(hint));
+    const data=await res.json();
+    if(data.error){setArea('naver','<div class="empty">오류: '+data.error+'</div>');return;}
+    renderNaver(data,label);setUpd('n-upd');
+  }catch(e){setArea('naver','<div class="empty">연결 실패</div>');}
+  finally{setSpin('n-spin',false);}
+}
+
+function renderNaver(data,catLabel){
+  const rows=data.results||[];
+  if(!rows.length){setArea('naver','<div class="empty">결과 없음</div>');return;}
+  const maxTotal=Math.max.apply(null,rows.map(function(r){return r.total||0;}));
+  let html='<div style="font-size:11px;color:#8e8e93;font-family:monospace;margin-bottom:8px;">'+catLabel+' — '+rows.length+'개 키워드 | 네이버 월간 검색량</div>';
+  rows.forEach(function(r,i){
+    const total=r.total||0;
+    const pct=maxTotal?Math.round(total/maxTotal*100):0;
+    const comp=r.competition;
+    const compC=comp==='높음'?'#c0392b':comp==='중간'?'#c07a00':'#1d9e75';
+    const compK=comp==='높음'?'높음':comp==='중간'?'보통':'낮음';
+    const safeKw=(r.keyword||'').replace(/'/g,"\\'");
+    const totalStr=total>=10000?(total/10000).toFixed(1)+'만회':total.toLocaleString()+'회';
+    html+='<div class="card">';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;">';
+    html+='<div style="display:flex;align-items:center;gap:6px;">';
+    html+='<span style="font-size:11px;font-family:monospace;color:#8e8e93;">'+String(i+1).padStart(2,'0')+'</span>';
+    html+='<span style="font-size:15px;font-weight:600;">'+(r.keyword||'')+'</span>';
+    if(total>=10000) html+='<span class="badge">인기</span>';
+    html+='</div>';
+    html+='<div style="display:flex;align-items:center;gap:8px;">';
+    html+='<span style="color:'+compC+';font-weight:600;font-size:11px;">● '+compK+' 경쟁</span>';
+    html+='<strong style="font-size:15px;color:#03c75a;">'+totalStr+'</strong></div></div>';
+    html+='<div class="bar-bg"><div style="height:4px;border-radius:3px;background:#03c75a;width:'+pct+'%;"></div></div>';
+    html+='<div style="display:flex;gap:14px;font-size:12px;color:#8e8e93;margin-bottom:8px;">';
+    html+='<span>💻 PC <strong style="color:#1d1d1f;">'+(r.monthlyPC||0).toLocaleString()+'</strong></span>';
+    html+='<span>📱 모바일 <strong style="color:#1d1d1f;">'+(r.monthlyMobile||0).toLocaleString()+'</strong></span></div>';
+    html+='<div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;gap:6px;align-items:center;">';
+    html+='<span style="font-size:11px;color:#8e8e93;white-space:nowrap;">추천 제목</span>';
+    html+='<button class="blog-btn" onclick="copyTitle(\''+safeKw+' 블로그 주제 — 제목 3개와 목차 (월 '+totalStr+' 검색)\')">'+( r.keyword||'')+' 블로그 주제 📋</button>';
+    html+='</div></div>';
+  });
+  setArea('naver',html);
+}
+
+function toggleAuto(){
+  autoOn=!autoOn;
+  const btn=document.getElementById('autoBtn');
+  if(autoOn){btn.classList.add('on');btn.textContent='ON';autoTimer=setInterval(function(){if(curCat)fetchNaver(curCat.hint,curCat.label);},60000);}
+  else{btn.classList.remove('on');btn.textContent='OFF';clearInterval(autoTimer);}
+}
+
+// 유튜브
+async function loadYoutube(){
+  setSpin('yt-spin',true);
+  setArea('youtube','<div class="loading"><span class="spin">↻</span> 유튜브 분석 중...</div>');
+  try{
+    const res=await fetch(SERVER+'?type=youtube');
+    const data=await res.json();
+    if(data.error){setArea('youtube','<div class="empty">오류: '+data.error+'</div>');return;}
+    renderYoutube(data);setUpd('yt-upd');
+  }catch(e){setArea('youtube','<div class="empty">연결 실패</div>');}
+  finally{setSpin('yt-spin',false);}
+}
+
+function renderYoutube(data){
+  const trending=data.trending||[];
+  const videos=data.videos||[];
+  const maxCount=trending.length?trending[0].count:1;
+  let html='<div style="font-size:11px;color:#8e8e93;font-family:monospace;margin-bottom:8px;">급상승 키워드 '+trending.length+'개</div>';
+  html+='<div style="font-size:14px;font-weight:600;margin-bottom:8px;">🔥 인기 키워드</div>';
+  trending.forEach(function(k,i){
+    const pct=Math.round(k.count/maxCount*100);
+    const safeKw=(k.keyword||'').replace(/'/g,"\\'");
+    html+='<div class="card">';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;">';
+    html+='<div style="display:flex;align-items:center;gap:6px;">';
+    html+='<span style="font-size:11px;font-family:monospace;color:#8e8e93;">'+String(i+1).padStart(2,'0')+'</span>';
+    html+='<span style="font-size:15px;font-weight:600;">'+k.keyword+'</span>';
+    if(i<3) html+='<span class="badge">HOT</span>';
+    html+='</div><span style="font-size:11px;color:#8e8e93;">'+k.count+'개</span></div>';
+    html+='<div class="bar-bg"><div style="height:4px;border-radius:3px;background:#ff0000;width:'+pct+'%;"></div></div>';
+    html+='<div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;gap:6px;align-items:center;">';
+    html+='<span style="font-size:11px;color:#8e8e93;">추천 제목</span>';
+    html+='<button class="blog-btn" onclick="copyTitle(\''+safeKw+' 블로그 주제 — 제목 3개와 목차 작성\')">'+k.keyword+' 블로그 주제 📋</button>';
+    html+='</div></div>';
+  });
+  html+='<div style="font-size:14px;font-weight:600;margin:14px 0 8px;">📺 인기 급상승 영상 TOP'+videos.length+'</div>';
+  videos.forEach(function(v,i){
+    html+='<div class="card"><div style="display:flex;gap:8px;">';
+    html+='<span style="font-size:11px;font-family:monospace;color:#8e8e93;padding-top:2px;min-width:22px;">'+String(i+1).padStart(2,'0')+'</span>';
+    html+='<div><div style="font-size:13px;font-weight:500;line-height:1.4;">'+v.title+'</div>';
+    html+='<div style="font-size:11px;color:#8e8e93;margin-top:3px;">'+v.channel+'</div>';
+    html+='<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;">';
+    (v.tags||[]).forEach(function(t){html+='<span style="font-size:10px;padding:2px 7px;border-radius:8px;background:#f5f5f7;color:#8e8e93;">'+t+'</span>';});
+    html+='</div></div></div></div>';
+  });
+  setArea('youtube',html);
+}
+
+// 구글
+async function loadGoogle(){
+  setSpin('g-spin',true);
+  setArea('google','<div class="loading"><span class="spin">↻</span> 구글 실시간 조회 중...</div>');
+  try{
+    const res=await fetch(SERVER+'?type=google');
+    const data=await res.json();
+    if(data.error){setArea('google','<div class="empty">오류: '+data.error+'</div>');return;}
+    renderGoogle(data);setUpd('g-upd');
+  }catch(e){setArea('google','<div class="empty">연결 실패</div>');}
+  finally{setSpin('g-spin',false);}
+}
+
+function renderGoogle(data){
+  const trending=data.trending||[];
+  let html='<div style="font-size:11px;color:#8e8e93;font-family:monospace;margin-bottom:8px;">실시간 급상승 '+trending.length+'개</div>';
+  trending.forEach(function(k,i){
+    const safeKw=(k.keyword||'').replace(/'/g,"\\'");
+    const timeStr=k.pubDate?new Date(k.pubDate).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'';
+    html+='<div class="card">';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;">';
+    html+='<div style="display:flex;align-items:center;gap:6px;">';
+    html+='<span style="font-size:15px;font-weight:700;color:#4285f4;min-width:28px;">'+(i+1)+'</span>';
+    html+='<span style="font-size:15px;font-weight:600;">'+k.keyword+'</span>';
+    if(i<5) html+='<span class="badge">급상승</span>';
+    html+='</div><span style="font-size:11px;color:#8e8e93;">'+timeStr+'</span></div>';
+    html+='<div style="border-top:1px solid #f0f0f0;padding-top:8px;margin-top:8px;display:flex;gap:6px;align-items:center;">';
+    html+='<span style="font-size:11px;color:#8e8e93;">추천 제목</span>';
+    html+='<button class="blog-btn" onclick="copyTitle(\''+safeKw+' 블로그 주제 — 제목 3개와 목차 작성\')">'+k.keyword+' 블로그 주제 📋</button>';
+    html+='</div></div>';
+  });
+  setArea('google',html);
+}
+
+// 클립보드 복사 (아이폰용)
+function copyTitle(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){showToast('클립보드에 복사됐습니다!');});
+  } else {
+    const el=document.createElement('textarea');
+    el.value=text; el.style.position='fixed'; el.style.opacity='0';
+    document.body.appendChild(el); el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('클립보드에 복사됐습니다!');
+  }
+}
+
+function showToast(msg){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:9999;';document.body.appendChild(t);}
+  t.textContent=msg;t.style.display='block';
+  clearTimeout(t._t);t._t=setTimeout(function(){t.style.display='none';},2000);
+}
+
+function setArea(tab,html){document.getElementById(tab+'-area').innerHTML=html;}
+function setSpin(id,on){document.getElementById(id).innerHTML=on?'<span class="spin">↻</span> ':'';}
+function setUpd(id){
+  var t=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById(id).textContent='업데이트 '+t;
+}
+
+renderChips();
+</script>
+</body>
+</html>
